@@ -57,22 +57,25 @@ for instruction in instructions:
             arg.type = "var"
             continue
         elif arg.arg == "int":
-            arg.type = "int"
+            arg.type = "type"
             continue
         elif arg.arg == "bool":
-            arg.type = "bool"
+            arg.type = "type"
             continue
         elif arg.arg == "string":
-            arg.type = "string"
+            arg.type = "type"
             continue
         elif "string@" in arg.arg:
-            arg.type = "symb"
+            arg.type = "string"
+            arg.arg = arg.arg[7:]
             continue
         elif "int@" in arg.arg:
-            arg.type = "symb"
+            arg.type = "int"
+            arg.arg = arg.arg[4:]
             continue
         elif "bool@" in arg.arg:
-            arg.type = "symb"
+            arg.type = "bool"
+            arg.arg = arg.arg[5:]
             continue
         else:
             arg.type = "label"
@@ -84,7 +87,7 @@ for instruction in instructions:
             sys.exit(23)
         if instruction.args[0].type != "var":
             sys.exit(23)
-        if instruction.args[1].type not in ["symb","var"]:
+        if instruction.args[1].type not in ["int", "string", "bool","var"]:
             sys.exit(23)
     elif instruction.opcode in ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK"]:
         if len(instruction.args) != 0:
@@ -102,25 +105,25 @@ for instruction in instructions:
     elif instruction.opcode in ["PUSHS", "WRITE", "DPRINT"]:
         if len(instruction.args) != 1:
             sys.exit(23)
-        if instruction.args[0].type not in ["symb","var"]:
+        if instruction.args[0].type not in ["int", "string", "bool","var"]:
             sys.exit(23)
     elif instruction.opcode in ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "NOT", "GETCHAR", "SETCHAR", "CONCAT", "STRI2INT"]:
         if len(instruction.args) != 3:
             sys.exit(23)
         if instruction.args[0].type != "var":
             sys.exit(23)
-        if instruction.args[1].type not in ["symb","var"]:
+        if instruction.args[1].type not in ["int", "string", "bool","var"]:
             sys.exit(23)
-        if instruction.args[2].type not in ["symb","var"]:
+        if instruction.args[2].type not in ["int", "string", "bool","var"]:
             sys.exit(23)
     elif instruction.opcode in ["JUMPIFEQ", "JUMPIFNEQ"]:
         if len(instruction.args) != 3:
             sys.exit(23)
         if instruction.args[0].type != "label":
             sys.exit(23)
-        if instruction.args[1].type not in ["symb","var"]:
+        if instruction.args[1].type not in ["int", "string", "bool","var"]:
             sys.exit(23)
-        if instruction.args[2].type not in ["symb","var"]:
+        if instruction.args[2].type not in ["int", "string", "bool","var"]:
             sys.exit(23)
     elif instruction.opcode in ["EXIT"]:
         if len(instruction.args) != 1:
@@ -132,7 +135,7 @@ for instruction in instructions:
             sys.exit(23)
         if instruction.args[0].type != "var":
             sys.exit(23)
-        if instruction.args[1].type is not ["int", "bool", "string"]:
+        if instruction.args[1].type != "type":
             sys.exit(23)
     else:
         sys.exit(23)
