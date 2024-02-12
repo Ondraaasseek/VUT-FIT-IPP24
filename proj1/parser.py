@@ -1,6 +1,7 @@
 import sys
 import xml.etree.ElementTree as ET
 import xml.dom.minidom
+import re
 
 class Argument:
     def __init__(self, arg, type):
@@ -74,6 +75,12 @@ for instruction in instructions:
         elif "int@" in arg.arg:
             arg.type = "int"
             arg.arg = arg.arg[4:]
+            # Number regex pattern
+            DecReg = r"([+-]?[0-9]+)"
+            OctReg = r"([+-]?[0-7]+)"
+            HexReg = r"([+-]?[0-9a-fA-F]+)"
+            if not(re.match(DecReg, arg.arg) and re.match(OctReg, arg.arg) and re.match(HexReg, arg.arg)):
+                sys.exit(22) # maybe 23
             continue
         elif "bool@" in arg.arg:
             arg.type = "bool"

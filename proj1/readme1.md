@@ -13,4 +13,4 @@ poté si vezmu první prvek z pole a zkontroluju že ostatní argumenty které a
 pak už jen z jednotlivých funkčních řádku vytvořím XML.
 
 # TODO:
-Add regex to match octal and hexadecimal numbers
+Add regex to match octal and hexadecimal numbers and strings
