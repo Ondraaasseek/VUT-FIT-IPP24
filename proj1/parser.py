@@ -1,5 +1,6 @@
 import sys
 import xml.etree.ElementTree as ET
+import xml.dom.minidom
 
 class Argument:
     def __init__(self, arg, type):
@@ -21,10 +22,11 @@ if len(args) != 1:
         sys.exit(0)
 
 for line in sys.stdin:
+    line = line.split("#")[0]
     tokens = line.split()
     for i in range(0, len(tokens)):
         if tokens[i].__contains__("#"):
-            tokens = tokens[:i]
+            tokens[i] = tokens[i].split("#")[0]
             break
     if len(tokens) == 0:
         # Skiping empty lines or just comment lines
@@ -32,7 +34,7 @@ for line in sys.stdin:
     lines.append(tokens)
 
 # Check for .IPPcode24
-if len(lines) == 0 or lines[0][0] != ".IPPcode24":
+if len(lines) == 0 or not(lines[0][0].__contains__(".IPPcode24")):
     sys.exit(21)
 # If present, remove the .IPPcode24 line
 lines.pop(0)
@@ -87,7 +89,7 @@ for instruction in instructions:
             sys.exit(23)
         if instruction.args[0].type != "var":
             sys.exit(23)
-        if instruction.args[1].type not in ["int", "string", "bool","var"]:
+        if instruction.args[1].type not in ["int", "string", "bool", "var"]:
             sys.exit(23)
     elif instruction.opcode in ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK"]:
         if len(instruction.args) != 0:
@@ -105,7 +107,7 @@ for instruction in instructions:
     elif instruction.opcode in ["PUSHS", "WRITE", "DPRINT"]:
         if len(instruction.args) != 1:
             sys.exit(23)
-        if instruction.args[0].type not in ["int", "string", "bool","var"]:
+        if instruction.args[0].type not in ["int", "string", "bool", "var"]:
             sys.exit(23)
     elif instruction.opcode in ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "NOT", "GETCHAR", "SETCHAR", "CONCAT", "STRI2INT"]:
         if len(instruction.args) != 3:
@@ -143,14 +145,24 @@ for instruction in instructions:
 # Everything is OK we can begin XMLization
 root = ET.Element("program")
 root.set("language", "IPPcode24")
+
 for instruction in instructions:
     instr = ET.SubElement(root, "instruction")
     instr.set("order", str(instructions.index(instruction) + 1))
     instr.set("opcode", instruction.opcode)
+
     for arg in instruction.args:
         argEl = ET.SubElement(instr, "arg" + str(instruction.args.index(arg) + 1))
         argEl.set("type", arg.type)
         argEl.text = arg.arg
-print("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
-print(ET.tostring(root, encoding="unicode"))
+
+xml_string = ET.tostring(root, encoding="utf-8")
+dom = xml.dom.minidom.parseString(xml_string)
+formatted_xml = dom.toprettyxml(indent="    ")
+
+declaration = '<?xml version="1.0" encoding="UTF-8"?>\n'
+postString = formatted_xml.split("\n",1)[1]
+formatted_xml = declaration + postString
+
+sys.stdout.buffer.write(formatted_xml.encode("utf-8"))
 sys.exit(0)
