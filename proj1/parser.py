@@ -3,6 +3,15 @@ import xml.etree.ElementTree as ET
 import xml.dom.minidom
 import re
 
+class ErrCode:
+    tooManyArgs = 10
+    missingHeader = 21
+    wrongOpcode = 22
+    lexSyntax = 23
+
+
+
+
 class Argument:
     def __init__(self, arg, type):
         self.arg = arg
@@ -18,7 +27,7 @@ args = sys.argv
 if len(args) != 1:
     if args[1] == "--help":
         if len(args) > 2 or sys.stdin == 0:
-            sys.exit(10)
+            sys.exit(ErrCode.tooManyArgs)
         print("--help | Vypíše tuto zprávu")
         sys.exit(0)
 
@@ -36,7 +45,7 @@ for line in sys.stdin:
 
 # Check for .IPPcode24
 if len(lines) == 0 or not(lines[0][0].__contains__(".IPPcode24")):
-    sys.exit(21)
+    sys.exit(ErrCode.missingHeader)
 # If present, remove the .IPPcode24 line
 lines.pop(0)
 
@@ -51,7 +60,7 @@ validOpCodes = ["MOVE", "CREATEFRAME", "PUSHFRAME", "POPFRAME", "DEFVAR", "CALL"
 # Validate the opcode
 for instruction in instructions:
     if instruction.opcode.upper() not in validOpCodes:
-        sys.exit(22)
+        sys.exit(ErrCode.wrongOpcode)
 
 # Set argument types 
 for instruction in instructions:
@@ -80,7 +89,7 @@ for instruction in instructions:
             OctReg = r"([+-]?[0-7]+)"
             HexReg = r"([+-]?[0-9a-fA-F]+)"
             if not(re.match(DecReg, arg.arg) and re.match(OctReg, arg.arg) and re.match(HexReg, arg.arg)):
-                sys.exit(22) # maybe 23
+                sys.exit(ErrCode.lexSyntax)
             continue
         elif "bool@" in arg.arg:
             arg.type = "bool"
@@ -93,61 +102,61 @@ for instruction in instructions:
 for instruction in instructions:
     if instruction.opcode in ["MOVE", "INT2CHAR", "STRLEN", "TYPE"]:
         if len(instruction.args) != 2:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[0].type != "var":
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[1].type not in ["int", "string", "bool", "var"]:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
     elif instruction.opcode in ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK"]:
         if len(instruction.args) != 0:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
     elif instruction.opcode in ["DEFVAR", "POPS"]:
         if len(instruction.args) != 1:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[0].type != "var":
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
     elif instruction.opcode in ["CALL", "LABEL", "JUMP"]:
         if len(instruction.args) != 1:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[0].type != "label":
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
     elif instruction.opcode in ["PUSHS", "WRITE", "DPRINT"]:
         if len(instruction.args) != 1:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[0].type not in ["int", "string", "bool", "var"]:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
     elif instruction.opcode in ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "NOT", "GETCHAR", "SETCHAR", "CONCAT", "STRI2INT"]:
         if len(instruction.args) != 3:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[0].type != "var":
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[1].type not in ["int", "string", "bool","var"]:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[2].type not in ["int", "string", "bool","var"]:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
     elif instruction.opcode in ["JUMPIFEQ", "JUMPIFNEQ"]:
         if len(instruction.args) != 3:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[0].type != "label":
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[1].type not in ["int", "string", "bool","var"]:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[2].type not in ["int", "string", "bool","var"]:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
     elif instruction.opcode in ["EXIT"]:
         if len(instruction.args) != 1:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[0].type != "var":
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
     elif instruction.opcode in ["READ"]:
         if len(instruction.args) != 2:
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[0].type != "var":
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
         if instruction.args[1].type != "type":
-            sys.exit(23)
+            sys.exit(ErrCode.lexSyntax)
     else:
-        sys.exit(23)
+        sys.exit(ErrCode.lexSyntax)
 
 # Everything is OK we can begin XMLization
 root = ET.Element("program")
