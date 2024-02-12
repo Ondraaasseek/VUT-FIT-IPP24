@@ -80,6 +80,9 @@ for instruction in instructions:
         elif "string@" in arg.arg:
             arg.type = "string"
             arg.arg = arg.arg[7:]
+            StringReg = r"([a-zA-z_-$&%*!?][a-zA-Z0-9_-$&%*!?]*)"
+            if not re.match(StringReg, arg.arg):
+                sys.exit(ErrCode.lexSyntax)
             continue
         elif "int@" in arg.arg:
             arg.type = "int"
@@ -94,6 +97,8 @@ for instruction in instructions:
         elif "bool@" in arg.arg:
             arg.type = "bool"
             arg.arg = arg.arg[5:]
+            if not arg.arg is "true" and arg.arg is "false":
+                sys.exit(ErrCode.lexSyntax)
             continue
         else:
             arg.type = "label"
