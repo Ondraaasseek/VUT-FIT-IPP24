@@ -11,3 +11,6 @@ pokud načtu pouze stdin pokračuju následovně vstup si zformátuju a ořežu 
 poté si vezmu první prvek z pole a zkontroluju že ostatní argumenty které argumentu přísluší jsou validní.
 
 pak už jen z jednotlivých funkčních řádku vytvořím XML.
+
+# TODO:
+Add regex to match octal and hexadecimal numbers
