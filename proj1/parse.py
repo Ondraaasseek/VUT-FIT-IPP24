@@ -9,9 +9,6 @@ class ErrCode:
     wrongOpcode = 22
     lexSyntax = 23
 
-
-
-
 class Argument:
     def __init__(self, arg, type):
         self.arg = arg
@@ -60,13 +57,22 @@ validOpCodes = ["MOVE", "CREATEFRAME", "PUSHFRAME", "POPFRAME", "DEFVAR", "CALL"
 # Validate the opcode
 for instruction in instructions:
     if instruction.opcode.upper() not in validOpCodes:
+        if instruction.opcode.__contains__(".IPPcode24"):
+            sys.exit(ErrCode.lexSyntax)
         sys.exit(ErrCode.wrongOpcode)
+    instruction.opcode = instruction.opcode.upper()
 
 # Set argument types 
 for instruction in instructions:
     for arg in instruction.args:
+        if instruction.opcode in ["JUMP", "LABEL", "CALL"]:
+            arg.type = "label"
+            continue
         if "GF" in arg.arg[:2] or "LF" in arg.arg[:2] or "TF" in arg.arg[:2]:
             arg.type = "var"
+            ArgReg = r"([a-zA-Z_\-&%*$!?][a-zA-Z0-9_\-&%*$!?]*)"
+            if not(re.match(ArgReg, arg.arg)):
+                sys.exit(ErrCode.lexSyntax)
             continue
         elif arg.arg == "int":
             arg.type = "type"
@@ -80,29 +86,34 @@ for instruction in instructions:
         elif "string@" in arg.arg:
             arg.type = "string"
             arg.arg = arg.arg[7:]
-            StringReg = r"([a-zA-z_-$&%*!?][a-zA-Z0-9_-$&%*!?]*)"
-            if not re.match(StringReg, arg.arg):
+            # Checking for bad escape chars
+            StringReg = r""
+            if re.match(StringReg, arg.arg):
                 sys.exit(ErrCode.lexSyntax)
             continue
         elif "int@" in arg.arg:
             arg.type = "int"
             arg.arg = arg.arg[4:]
             # Number regex pattern
-            DecReg = r"([+-]?[0-9]+)"
-            OctReg = r"([+-]?[0-7]+)"
-            HexReg = r"([+-]?[0-9a-fA-F]+)"
-            if not(re.match(DecReg, arg.arg) and re.match(OctReg, arg.arg) and re.match(HexReg, arg.arg)):
+            DecReg = r"(^[+-]?[0-9]+$)"
+            OctReg = r"(^[+-]?(0o)[0-7]+$)"
+            HexReg = r"(^[+-]?[(0x)0-9a-fA-F]+$)"
+            if not(re.match(DecReg, arg.arg) or re.match(OctReg, arg.arg) or re.match(HexReg, arg.arg)):
                 sys.exit(ErrCode.lexSyntax)
             continue
         elif "bool@" in arg.arg:
             arg.type = "bool"
             arg.arg = arg.arg[5:]
-            if not arg.arg is "true" and arg.arg is "false":
+            if not (arg.arg == "true" or arg.arg == "false"):
                 sys.exit(ErrCode.lexSyntax)
             continue
+        elif "nil@" in arg.arg:
+            arg.type = "nil"
+            arg.arg = arg.arg[4:]
+            if not (arg.arg == "nil"):
+                sys.exit(ErrCode.lexSyntax)
         else:
             arg.type = "label"
-
 # Check for correct number and types of arguments
 for instruction in instructions:
     if instruction.opcode in ["MOVE", "INT2CHAR", "STRLEN", "TYPE"]:
@@ -110,7 +121,7 @@ for instruction in instructions:
             sys.exit(ErrCode.lexSyntax)
         if instruction.args[0].type != "var":
             sys.exit(ErrCode.lexSyntax)
-        if instruction.args[1].type not in ["int", "string", "bool", "var"]:
+        if instruction.args[1].type not in ["int", "string", "bool", "var", "nil"]:
             sys.exit(ErrCode.lexSyntax)
     elif instruction.opcode in ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK"]:
         if len(instruction.args) != 0:
@@ -128,25 +139,32 @@ for instruction in instructions:
     elif instruction.opcode in ["PUSHS", "WRITE", "DPRINT"]:
         if len(instruction.args) != 1:
             sys.exit(ErrCode.lexSyntax)
-        if instruction.args[0].type not in ["int", "string", "bool", "var"]:
+        if instruction.args[0].type not in ["int", "string", "bool", "var", "nil"]:
             sys.exit(ErrCode.lexSyntax)
-    elif instruction.opcode in ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "NOT", "GETCHAR", "SETCHAR", "CONCAT", "STRI2INT"]:
+    elif instruction.opcode in ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "GETCHAR", "SETCHAR", "CONCAT", "STRI2INT"]:
         if len(instruction.args) != 3:
             sys.exit(ErrCode.lexSyntax)
         if instruction.args[0].type != "var":
             sys.exit(ErrCode.lexSyntax)
-        if instruction.args[1].type not in ["int", "string", "bool","var"]:
+        if instruction.args[1].type not in ["int", "string", "bool", "var", "nil"]:
             sys.exit(ErrCode.lexSyntax)
-        if instruction.args[2].type not in ["int", "string", "bool","var"]:
+        if instruction.args[2].type not in ["int", "string", "bool", "var", "nil"]:
+            sys.exit(ErrCode.lexSyntax)
+    elif instruction.opcode in ["NOT"]:
+        if len(instruction.args) != 2:
+            sys.exit(ErrCode.lexSyntax)
+        if instruction.args[0].type != "var":
+            sys.exit(ErrCode.lexSyntax)
+        if instruction.args[1].type not in ["int", "string", "bool", "var", "nil"]:
             sys.exit(ErrCode.lexSyntax)
     elif instruction.opcode in ["JUMPIFEQ", "JUMPIFNEQ"]:
         if len(instruction.args) != 3:
             sys.exit(ErrCode.lexSyntax)
         if instruction.args[0].type != "label":
             sys.exit(ErrCode.lexSyntax)
-        if instruction.args[1].type not in ["int", "string", "bool","var"]:
+        if instruction.args[1].type not in ["int", "string", "bool", "var", "nil"]:
             sys.exit(ErrCode.lexSyntax)
-        if instruction.args[2].type not in ["int", "string", "bool","var"]:
+        if instruction.args[2].type not in ["int", "string", "bool", "var", "nil"]:
             sys.exit(ErrCode.lexSyntax)
     elif instruction.opcode in ["EXIT"]:
         if len(instruction.args) != 1:
