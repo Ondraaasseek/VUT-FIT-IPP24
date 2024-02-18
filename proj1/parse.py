@@ -87,10 +87,15 @@ for instruction in instructions:
             arg.type = "string"
             arg.arg = arg.arg[7:]
             # Checking for bad escape chars
-            StringReg = r""
-            if re.match(StringReg, arg.arg):
-                sys.exit(ErrCode.lexSyntax)
-            continue
+            for i in range(0, len(arg.arg)):
+                if arg.arg[i] == "\\":
+                    if i + 1 >= len(arg.arg) or arg.arg[i+1] != "0":
+                        sys.exit(ErrCode.lexSyntax)
+                    if not (arg.arg[i + 2] in ["0", "1", "2", "3", "9"]):
+                        sys.exit(ErrCode.lexSyntax)
+                    if not (arg.arg[i + 3] in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]):
+                        sys.exit(ErrCode.lexSyntax)
+                    continue
         elif "int@" in arg.arg:
             arg.type = "int"
             arg.arg = arg.arg[4:]
