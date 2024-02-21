@@ -200,13 +200,7 @@ for instruction in instructions:
         argEl.set("type", arg.type)
         argEl.text = arg.arg
 
-xml_string = ET.tostring(root, encoding="utf-8")
-dom = xml.dom.minidom.parseString(xml_string)
-formatted_xml = dom.toprettyxml(indent="    ")
-
-declaration = '<?xml version="1.0" encoding="UTF-8"?>\n'
-postString = formatted_xml.split("\n",1)[1]
-formatted_xml = declaration + postString
-
-sys.stdout.buffer.write(formatted_xml.encode("utf-8"))
+xml_string = ET.tostring(root, encoding="UTF-8", method="xml", xml_declaration=True).decode("utf-8")
+dom = xml.dom.minidom.parseString(xml_string).toprettyxml(indent="    ", encoding="UTF-8").decode("utf-8")
+sys.stdout.buffer.write(dom.encode("utf-8"))
 sys.exit(0)

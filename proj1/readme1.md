@@ -9,7 +9,7 @@ v rámci vstupů a parametrů vyžadovaných zadáním.
 ### Validace opcodes
 V rámci zadání bylo řečeno že vstup má být case insensitive tuto problematiku zpracovává můj script tak že nastavím 
 veškeré opcode prvky pomocí funkce `upper()` na velká písmena a následně si pomocí pole správných prvků vyhledám že se
-prvek v poli nachází pokud ano vše v pořádku a můžu pokračovat pokud ne končí program v ten moment chybou 22.
+prvek v poli nachází pokud ano vše v pořádku a můžu pokračovat pokud ne, program končí chybou 22.
 
 ### Validace argumentů
 probíhá ihned po zkontrolování všech opcodes zkontroluje pokud má @čkovou část a na tom základě kontroluje o jaký typ
@@ -17,7 +17,7 @@ argumentu se jedná a podle toho pak probíhá následná analýza.
 
 ### Validace jednotlivých instrukcí
 Když už máme zvalidované jednotlivé opcodes a argumenty vezmu si Třídu Instruction a její prvky ve kterých se nachází
-na základě opcodes si procházím všechny dostupné argumenty a kontroluji že pro danný opcode je jich správný počet a 
+na základě opcodes si procházím všechny dostupné argumenty a kontroluji že pro danný opcode, zda je jich správný počet a 
 správné typy na správných pozicích.
 
 ### Tvorba XML výstupu
