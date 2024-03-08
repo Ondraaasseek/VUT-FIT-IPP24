@@ -18,7 +18,7 @@ class Instruction:
     def __init__(self, opcode, *args):
         self.opcode = opcode
         self.args = [Argument(arg, None) for arg in args]
-
+# Catching arguments from stdin and parsing them if anything is wrong, exit with error code
 lines = []
 args = sys.argv
 if len(args) != 1:
@@ -27,7 +27,10 @@ if len(args) != 1:
             sys.exit(ErrCode.tooManyArgs)
         print("--help | Vypíše tuto zprávu")
         sys.exit(0)
+    else:
+        sys.exit(ErrCode.tooManyArgs)
 
+# Read the input and split it into lines and remove comments from the lines
 for line in sys.stdin:
     line = line.split("#")[0]
     tokens = line.split()
@@ -56,6 +59,7 @@ for line in lines:
 validOpCodes = ["MOVE", "CREATEFRAME", "PUSHFRAME", "POPFRAME", "DEFVAR", "CALL", "RETURN", "PUSHS", "POPS", "ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "NOT", "INT2CHAR", "STRI2INT", "READ", "WRITE", "CONCAT", "STRLEN", "GETCHAR", "SETCHAR", "TYPE", "LABEL", "JUMP", "JUMPIFEQ", "JUMPIFNEQ", "DPRINT", "BREAK"]
 # Validate the opcode
 for instruction in instructions:
+    # If we find any .IPPcode24 instruction, we exit with error code 23
     if instruction.opcode.upper() not in validOpCodes:
         if instruction.opcode.__contains__(".IPPcode24"):
             sys.exit(ErrCode.lexSyntax)
@@ -89,13 +93,15 @@ for instruction in instructions:
             # Checking for bad escape chars
             for i in range(0, len(arg.arg)):
                 if arg.arg[i] == "\\":
-                    if i + 1 >= len(arg.arg) or arg.arg[i+1] != "0":
+                    # check if next 3 chars are number and the length of the remaining string is at least 3
+                    if len(arg.arg) - i < 4:
                         sys.exit(ErrCode.lexSyntax)
-                    if not (arg.arg[i + 2] in ["0", "1", "2", "3", "9"]):
+                    if not arg.arg[i+1:i+4].isdigit():
                         sys.exit(ErrCode.lexSyntax)
-                    if not (arg.arg[i + 3] in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]):
-                        sys.exit(ErrCode.lexSyntax)
-                    continue
+                        # convert those 3 numbers to int and check if they are in range
+                    if int(arg.arg[i+1:i+4]) < 0 or int(arg.arg[i+1:i+4]) > 33:
+                        if int(arg.arg[i+1:i+4]) != 35 or int(arg.arg[i+1:i+4]) != 92:
+                            sys.exit(ErrCode.lexSyntax)
         elif "int@" in arg.arg:
             arg.type = "int"
             arg.arg = arg.arg[4:]
