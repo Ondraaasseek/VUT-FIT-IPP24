@@ -1,0 +1,14 @@
+proj2/ipp-core/.devcontainer
+proj2/ipp-core/.vscode
+proj2/ipp-core/core
+proj2/ipp-core/tmp
+proj2/ipp-core/vendor
+proj2/ipp-core/.gitignore
+proj2/ipp-core/composer.json
+proj2/ipp-core/composer.lock
+proj2/ipp-core/composer.phar
+proj2/ipp-core/interpreter.php
+proj2/ipp-core/is_it_ok.sh
+proj2/ipp-core/Makefile
+proj2/ipp-core/phpstan.neon
+proj2/ipp-core/README.md
