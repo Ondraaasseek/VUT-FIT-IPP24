@@ -2,46 +2,43 @@
 
 namespace IPP\Student\Instructions;
 
+use IPP\Core\Exception\NotImplementedException;
 use IPP\Student\Frames\FrameController;
-use IPP\Student\Variables\Variable;
+use IPP\Core\StreamWriter;
 
 class InstrucWrite extends Instruction
 {
+    public function handleEscapeSequences($string) : string {
+        for ($i = 0; $i <= 32; $i++) {
+            $string = str_replace('\\' . str_pad($i, 3, '0', STR_PAD_LEFT), chr($i), $string);
+        }
+        $string = str_replace('\\035', chr(035), $string);
+        $string = str_replace('\\092', '\\', $string);
+        return stripcslashes($string);
+    }
+
     public function execute(FrameController $frameController): void
     {
         // TODO: Replace echo with propper $this->stdout->writeString("stdout"); but in the correct context
         // Should be only one argument
+        $streamWriter = new StreamWriter(STDOUT);
         $args = $this->getArgs();
+        $symbol = CheckSymbol::checkValidity($frameController, $args[0]);
 
-        $frame = explode('@', $args[0])[0];
-        if ($frame == 'GF') {
-            $variable = $frameController->getGlobalFrame()->getVariable(explode('@', $args[0])[1]);
-        } elseif ($frame == 'LF') {
-            $variable = $frameController->getLocalFrame()->getVariable(explode('@', $args[0])[1]);
-        } elseif ($frame == 'TF') {
-            $variable = $frameController->getTemporaryFrame()->getVariable(explode('@', $args[0])[1]);
-        } else {
-            // it's not a variable so print it
-            if ($args[0] == 'nil@nil') {
-                echo '';
-                return;
-            }
-
-            echo explode('@', $args[0])[1];
-            return;
+        if (CheckSymbol::getType($symbol) == 'bool') {
+            $streamWriter->writeBool(CheckSymbol::getValue($symbol));
         }
-        $out = $variable->getValue();
-        if ($variable->getType() == 'bool') {
-            if ($out == 'true' || $out == 'TRUE' || $out == 'True' || $out == '1') {
-                echo 'true';
-            } else {
-                echo 'false';
-            }
+        else if (CheckSymbol::getType($symbol) == 'nil') {
+            $streamWriter->writeString('');
         }
-        else if ($variable->getType() == 'nil') {
-            echo '';
-        } else {
-            echo $out;
+        else if (CheckSymbol::getType($symbol) == 'int') {
+            $streamWriter->writeInt(CheckSymbol::getValue($symbol));
+        }
+        else if (CheckSymbol::getType($symbol) == 'float') {
+            throw new NotImplementedException;
+        }
+        else if (CheckSymbol::getType($symbol) == 'string') {
+            $streamWriter->writeString($this->handleEscapeSequences(CheckSymbol::getValue($symbol)));
         }
     }
 }

@@ -2,6 +2,8 @@
 
 namespace IPP\student\Frames;
 
+use IPP\Student\Instructions\Instruction;
+
 class Stack
 {
     private array $stack;
@@ -11,12 +13,12 @@ class Stack
         $this->stack = [];
     }
 
-    public function push(string $arg): void
+    public function push(string|Instruction $arg): void
     {
         array_push($this->stack, $arg);
     }
 
-    public function pop(): ?string
+    public function pop(): string|Instruction|null
     {
         return array_pop($this->stack);
     }

@@ -33,7 +33,7 @@ class Interpreter extends AbstractInterpreter
                     if ($arg->getAttribute('type') != 'var'){
                         $args[] = $arg->getAttribute('type') . '@' . $arg->nodeValue;
                     } else {
-                        // If argument is var type just add it to the args array
+                        // If argument is var type, add it to the args array
                         $args[] = $arg->nodeValue;
                     }
                 }
@@ -44,8 +44,19 @@ class Interpreter extends AbstractInterpreter
             $instructionObj = InstructionFactory::createInstance($opCode, $args);
             $instructionsArray[(int)$instruction->getAttribute('order')] = $instructionObj;
         }
+        // Sort in different desc order and push into callstack
         ksort($instructionsArray);
-        foreach ($instructionsArray as $instruction){
+        // Fix the order of the instructions
+        $instructionsArray = array_values($instructionsArray);
+        // Set the instruction array to the frame controller
+        $frameController->setInstructionsArray($instructionsArray);
+
+        while (!empty($instructionsArray) || !$frameController->callStackIsEmpty()){
+            if ($frameController->callStackIsEmpty()){
+                $frameController->pushCallStack($instructionsArray[0]);
+                $instructionsArray = array_slice($instructionsArray, 1);
+            }
+            $instruction = $frameController->popCallStack();
             $instruction->execute($frameController);
         }
         return 0;

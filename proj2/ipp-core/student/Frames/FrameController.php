@@ -3,6 +3,7 @@
 namespace IPP\Student\Frames;
 
 use IPP\student\Exceptions\MissingValueException;
+use IPP\Student\Instructions\Instruction;
 
 class FrameController
 {
@@ -25,6 +26,13 @@ class FrameController
 
     private Stack $CallStack;
 
+    /** Array of instructions
+     * @var array<Instruction> $instructionsArray
+     **/
+    private array $instructionsArray;
+
+    private int $instructionCounter;
+
     public function __construct()
     {
         $this->globalFrame = new Frame();
@@ -32,6 +40,7 @@ class FrameController
         $this->localFrame = [];
         $this->stack = new Stack();
         $this->CallStack = new Stack();
+        $this->instructionCounter = 0;
     }
 
     public function getGlobalFrame(): Frame
@@ -95,17 +104,51 @@ class FrameController
         $this->stack->push($arg);
     }
 
-    public function pushCallStack(string $arg): void
+    public function stackIsEmpty(): bool
+    {
+        return $this->stack->isEmpty();
+    }
+
+    public function pushCallStack(Instruction $arg): void
     {
         $this->CallStack->push($arg);
     }
 
-    public function popCallStack(): string
+    public function popCallStack(): Instruction
     {
         $out = $this->CallStack->pop();
         if ($out === null) {
             throw new MissingValueException("CallStack is empty");
         }
         return $out;
+    }
+
+    public function callStackIsEmpty(): bool{
+        return $this->CallStack->isEmpty();
+    }
+
+    public function getInstructionCounter(): int
+    {
+        return $this->instructionCounter;
+    }
+
+    public function IncrementInstructionCounter(): void
+    {
+        $this->instructionCounter++;
+    }
+
+    public function getInstructionsArray(): array
+    {
+        return $this->instructionsArray;
+    }
+
+    public function setInstructionsArray(array $instructionsArray): void
+    {
+        $this->instructionsArray = $instructionsArray;
+    }
+
+    public function findInstruction(int $order): Instruction
+    {
+        return $this->instructionsArray[$order];
     }
 }
