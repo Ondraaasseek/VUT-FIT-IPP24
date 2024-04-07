@@ -2,8 +2,8 @@
 
 namespace IPP\student\Instructions;
 
-use IPP\student\Exceptions\BadOperandTypeException;
-use IPP\student\Exceptions\NonExistentVariableException;
+use IPP\Student\Exceptions\BadOperandTypeException;
+use IPP\Student\Exceptions\NonExistentVariableException;
 use IPP\Student\Frames\FrameController;
 use IPP\Student\Variables\Variable;
 

@@ -123,8 +123,14 @@ class FrameController
         return $out;
     }
 
-    public function callStackIsEmpty(): bool{
+    public function callStackIsEmpty(): bool
+    {
         return $this->CallStack->isEmpty();
+    }
+
+    public function callStackTop(): Instruction
+    {
+        return $this->CallStack->top();
     }
 
     public function getInstructionCounter(): int

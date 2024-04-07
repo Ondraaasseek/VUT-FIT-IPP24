@@ -3,7 +3,9 @@
 namespace IPP\Student;
 
 use IPP\Core\AbstractInterpreter;
+use IPP\student\Exceptions\SemanticExceptionException;
 use IPP\Student\Frames\FrameController;
+use IPP\Student\Instructions\Instruction;
 use IPP\Student\Instructions\InstructionFactory;
 use IPP\Core\Exception\NotImplementedException;
 
@@ -12,9 +14,6 @@ class Interpreter extends AbstractInterpreter
     public function execute(): int
     {
         $dom = $this->source->getDOMDocument();
-        // $val = $this->input->readString();
-        // $this->stdout->writeString("stdout");
-        // $this->stderr->writeString("stderr");
 
         $instructionsArray = [];
         $frameController = new FrameController();
@@ -43,6 +42,7 @@ class Interpreter extends AbstractInterpreter
             // Create an instance of the instruction
             $instructionObj = InstructionFactory::createInstance($opCode, $args);
             $instructionsArray[(int)$instruction->getAttribute('order')] = $instructionObj;
+            //print_r($instructionsArray);
         }
         // Sort in different desc order and push into callstack
         ksort($instructionsArray);
@@ -50,15 +50,38 @@ class Interpreter extends AbstractInterpreter
         $instructionsArray = array_values($instructionsArray);
         // Set the instruction array to the frame controller
         $frameController->setInstructionsArray($instructionsArray);
-
-        while (!empty($instructionsArray) || !$frameController->callStackIsEmpty()){
-            if ($frameController->callStackIsEmpty()){
-                $frameController->pushCallStack($instructionsArray[0]);
-                $instructionsArray = array_slice($instructionsArray, 1);
-            }
+        // Input the first instruction to the call stack
+        $i = 0;
+        $frameController->pushCallStack($instructionsArray[$i]);
+        while(!$frameController->callStackIsEmpty()){
             $instruction = $frameController->popCallStack();
             $instruction->execute($frameController);
+            if ($frameController->callStackIsEmpty()){
+                $i++;
+                if ($i < count($instructionsArray)){
+                    $frameController->pushCallStack($instructionsArray[$i]);
+                }
+            } else {
+                // We have something that changed the call stack, so we have to find that new label and edit the $i by it
+                $i = $this->findInstructionIndex($instructionsArray, $frameController->callStackTop());
+                if ($i < count($instructionsArray)){
+                    $i++;
+                }
+                $frameController->pushCallStack($instructionsArray[$i]);
+            }
         }
         return 0;
+    }
+
+    private function findInstructionIndex($instructionsArray, $instruction) : int{
+        if ($instruction == null){
+            throw new SemanticExceptionException('Instruction not found.');
+        }
+        foreach ($instructionsArray as $key => $value){
+            if ($value == $instruction){
+                return $key;
+            }
+        }
+        throw new SemanticExceptionException('Instruction not found.');
     }
 }

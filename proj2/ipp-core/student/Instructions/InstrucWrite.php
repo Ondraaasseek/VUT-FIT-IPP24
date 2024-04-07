@@ -19,7 +19,6 @@ class InstrucWrite extends Instruction
 
     public function execute(FrameController $frameController): void
     {
-        // TODO: Replace echo with propper $this->stdout->writeString("stdout"); but in the correct context
         // Should be only one argument
         $streamWriter = new StreamWriter(STDOUT);
         $args = $this->getArgs();
@@ -31,7 +30,7 @@ class InstrucWrite extends Instruction
         else if (CheckSymbol::getType($symbol) == 'nil') {
             $streamWriter->writeString('');
         }
-        else if (CheckSymbol::getType($symbol) == 'int') {
+        else if (CheckSymbol::getType($symbol) == 'integer') {
             $streamWriter->writeInt(CheckSymbol::getValue($symbol));
         }
         else if (CheckSymbol::getType($symbol) == 'float') {

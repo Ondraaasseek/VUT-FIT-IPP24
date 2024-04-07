@@ -10,6 +10,6 @@ class MissingValueException extends IPPException
 {
     public function __construct(string $message = "Missing value", ?Throwable $previous = null)
     {
-        parent::__construct($message, ReturnCode::VALUE_ERROR, $previous);
+        parent::__construct($message, ReturnCode::VALUE_ERROR, $previous, false);
     }
 }

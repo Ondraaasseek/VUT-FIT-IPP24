@@ -10,6 +10,6 @@ class SemanticExceptionException extends IPPException
 {
     public function __construct(string $message = "Semantic Error", ?Throwable $previous = null)
     {
-        parent::__construct($message, ReturnCode::SEMANTIC_ERROR, $previous);
+        parent::__construct($message, ReturnCode::SEMANTIC_ERROR, $previous, false);
     }
 }

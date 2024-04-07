@@ -23,7 +23,7 @@ class Stack
         return array_pop($this->stack);
     }
 
-    public function top(): ?string
+    public function top(): string|Instruction|null
     {
         return ($this->stack[0]);
     }

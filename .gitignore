@@ -13,3 +13,4 @@ proj2/ipp-core/Makefile
 proj2/ipp-core/phpstan.neon
 proj2/ipp-core/README.md
 proj2/ipp-core/.vscode
+proj2/ipp-core/supplementary-tests

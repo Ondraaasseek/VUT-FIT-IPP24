@@ -10,6 +10,6 @@ class WrongStringUsageException extends IPPException
 {
     public function __construct(string $message = "Wrong string usage", ?Throwable $previous = null)
     {
-        parent::__construct($message, ReturnCode::STRING_OPERATION_ERROR, $previous);
+        parent::__construct($message, ReturnCode::STRING_OPERATION_ERROR, $previous, false);
     }
 }
