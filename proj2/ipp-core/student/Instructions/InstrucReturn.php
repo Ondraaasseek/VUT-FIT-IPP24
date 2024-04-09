@@ -3,7 +3,7 @@
 namespace IPP\Student\Instructions;
 
 use IPP\Student\Exceptions\BadOperandValueException;
-use IPP\student\Exceptions\UnexpectedFileStructureException;
+use IPP\Student\Exceptions\UnexpectedFileStructureException;
 use IPP\Student\Frames\FrameController;
 
 class InstrucReturn extends Instruction

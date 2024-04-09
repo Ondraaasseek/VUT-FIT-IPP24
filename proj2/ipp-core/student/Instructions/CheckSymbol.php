@@ -3,6 +3,7 @@
 namespace IPP\Student\Instructions;
 
 use IPP\Core\Exception\NotImplementedException;
+use IPP\Student\Exceptions\BadOperandTypeException;
 use IPP\Student\Exceptions\BadOperandValueException;
 use IPP\Student\Exceptions\NonExistentVariableException;
 use IPP\Student\Exceptions\SemanticExceptionException;
@@ -16,8 +17,9 @@ class CheckSymbol
      * @throws NonExistentVariableException
      * @throws NotImplementedException
      * @throws SemanticExceptionException
+     * @throws BadOperandTypeException
      */
-    public static function checkValidity(FrameController $frameController, Instruction|string $arg): string|int|bool|Variable
+    public static function checkValidity(FrameController $frameController, Instruction|string $arg): string|int|Variable
     {
         if ($arg instanceof Instruction){
             throw new SemanticExceptionException("Instruction on normal stack.");
@@ -59,6 +61,9 @@ class CheckSymbol
                 throw new NotImplementedException("Float is not implemented.");
             default:
                 throw new NonExistentVariableException("Variable " . $nameOrValue . " was not found in " . $frameOrType . " frame.");
+        }
+        if ($variable == null){
+            throw new BadOperandTypeException("Variable " . $nameOrValue . " is bad Type .");
         }
         return $variable;
     }

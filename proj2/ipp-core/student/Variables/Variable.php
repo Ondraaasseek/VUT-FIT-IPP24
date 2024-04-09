@@ -30,9 +30,13 @@ class Variable
         return $this->type;
     }
 
-    public function getValue() : string|bool|int|null
+    public function getValue() : string|bool|int
     {
-        return $this->value;
+        if($this->value != null) {
+            return $this->value;
+        } else {
+            return '';
+        }
     }
 
     public function setValue(bool|int|string $value): void

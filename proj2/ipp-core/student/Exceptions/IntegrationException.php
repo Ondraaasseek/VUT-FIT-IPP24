@@ -1,9 +1,10 @@
 <?php
 
-namespace IPP\student\Exceptions;
+namespace IPP\Student\Exceptions;
 
 use IPP\Core\Exception\IPPException;
 use IPP\Core\ReturnCode;
+use Throwable;
 
 class IntegrationException extends IPPException
 {

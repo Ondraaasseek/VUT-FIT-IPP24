@@ -38,7 +38,7 @@ class InstrucWrite extends Instruction
         $symbol = CheckSymbol::checkValidity($frameController, $args[0]);
 
         if (CheckSymbol::getType($symbol) == 'bool') {
-            $streamWriter->writeString(CheckSymbol::getValue($symbol));
+            $streamWriter->writeString((string)CheckSymbol::getValue($symbol));
         }
         else if (CheckSymbol::getType($symbol) == 'nil') {
             $streamWriter->writeString('');

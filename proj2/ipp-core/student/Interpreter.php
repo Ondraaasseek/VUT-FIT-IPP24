@@ -15,20 +15,6 @@ use IPP\Student\Instructions\InstructionFactory;
 class Interpreter extends AbstractInterpreter
 {
     /**
-     * @param array<Instruction> $instructionsArray
-     * @throws SemanticExceptionException
-     */
-    private function findInstructionIndex(array $instructionsArray, Instruction $instruction) : int{
-        foreach ($instructionsArray as $key => $value){
-            if ($value === $instruction){
-                return $key;
-            }
-        }
-        throw new SemanticExceptionException('Instruction not found.');
-    }
-
-
-    /**
      * @throws MissingValueException
      * @throws SemanticExceptionException
      * @throws UnexpectedFileStructureException
@@ -39,7 +25,7 @@ class Interpreter extends AbstractInterpreter
         $root = $dom->documentElement;
 
         // Check if the root element is correct
-        if ($root->nodeName !== 'program' || $root->getAttribute('language') !== 'IPPcode24') {
+        if ($root !== null && ($root->nodeName !== 'program' || $root->getAttribute('language') !== 'IPPcode24')) {
             throw new UnexpectedFileStructureException('Invalid root element. Expected <program language="IPPcode24">.');
         }
 
@@ -48,9 +34,11 @@ class Interpreter extends AbstractInterpreter
         $frameController->setInputReader($this->input);
 
         // Check if the root element has only instruction elements
-        foreach ($root->childNodes as $element) {
-            if ($element instanceof DOMElement && $element->nodeName !== 'instruction') {
-                throw new UnexpectedFileStructureException('Unknown element found: ' . $element->nodeName);
+        if ($root !== null) {
+            foreach ($root->childNodes as $element) {
+                if ($element instanceof DOMElement && $element->nodeName !== 'instruction') {
+                    throw new UnexpectedFileStructureException('Unknown element found: ' . $element->nodeName);
+                }
             }
         }
 

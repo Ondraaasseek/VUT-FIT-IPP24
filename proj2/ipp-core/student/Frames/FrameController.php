@@ -2,7 +2,6 @@
 
 namespace IPP\Student\Frames;
 
-use IPP\Core\FileInputReader;
 use IPP\Core\Interface\InputReader;
 use IPP\Core\StreamWriter;
 use IPP\Student\Exceptions\FrameDoesNotExistsException;
@@ -17,7 +16,7 @@ class FrameController
     private $globalFrame;
 
     /**
-     * @var Frame $temporaryFrame
+     * @var Frame|null $temporaryFrame
      **/
     private $temporaryFrame;
 
@@ -70,10 +69,13 @@ class FrameController
         return $this->globalFrame;
     }
 
+    /**
+     * @throws FrameDoesNotExistsException
+     */
     public function getTemporaryFrame(): Frame
     {
         $return = $this->temporaryFrame;
-        if ($return === null) {
+        if ($return == null) {
             throw new FrameDoesNotExistsException("No temporary frame.");
         }
         return $return;
@@ -82,7 +84,7 @@ class FrameController
     public function getLocalFrame(): Frame
     {
         // Get the first frame from stack
-        return $this->localFrame[0];
+        return $this->localFrame[count($this->localFrame) - 1];
     }
 
     public function pushLocalFrame(Frame $frame): void
@@ -109,11 +111,17 @@ class FrameController
         $this->temporaryFrame = new Frame();
     }
 
+    /**
+     * @throws FrameDoesNotExistsException
+     */
     public function popFrame(): void
     {
         $this->temporaryFrame = $this->popLocalFrame();
     }
 
+    /**
+     * @throws FrameDoesNotExistsException
+     */
     public function pushFrame(): void
     {
         if ($this->temporaryFrame === null) {
@@ -124,11 +132,14 @@ class FrameController
         $this->temporaryFrame = null;
     }
 
-    public function popStack(): string|Instruction
+    public function popStack(): string
     {
         $out = $this->stack->pop();
         if ($out === null) {
             throw new MissingValueException("Stack is empty");
+        }
+        if (is_integer($out)) {
+            $out = (string)$out;
         }
         return $out;
     }
@@ -141,6 +152,11 @@ class FrameController
     public function stackIsEmpty(): bool
     {
         return $this->stack->isEmpty();
+    }
+
+    public function getStack() : Stack
+    {
+        return $this->stack;
     }
 
     public function pushCallStack(int $arg): void
