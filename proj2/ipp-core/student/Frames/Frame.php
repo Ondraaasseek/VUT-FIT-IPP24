@@ -16,6 +16,15 @@ class Frame
         $this->variables = [];
     }
 
+    public function __toString(): string
+    {
+        $variables = [];
+        foreach ($this->variables as $variable) {
+            $variables[] = $variable->__toString();
+        }
+        return implode("\n", $variables);
+    }
+
     public function addVariable(Variable $variable): void
     {
         $this->variables[$variable->getName()] = $variable;

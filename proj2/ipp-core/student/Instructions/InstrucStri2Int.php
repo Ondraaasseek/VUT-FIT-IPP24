@@ -2,29 +2,46 @@
 
 namespace IPP\Student\Instructions;
 
-use IPP\student\Exceptions\BadOperandTypeException;
-use IPP\student\Exceptions\WrongStringUsageException;
+use IPP\Core\Exception\NotImplementedException;
+use IPP\Student\Exceptions\BadOperandTypeException;
+use IPP\Student\Exceptions\BadOperandValueException;
+use IPP\Student\Exceptions\NonExistentVariableException;
+use IPP\Student\Exceptions\SemanticExceptionException;
+use IPP\Student\Exceptions\UnexpectedFileStructureException;
+use IPP\Student\Exceptions\WrongStringUsageException;
 use IPP\Student\Frames\FrameController;
 
 class InstrucStri2Int extends Instruction
 {
+    /**
+     * @throws NonExistentVariableException
+     * @throws NotImplementedException
+     * @throws SemanticExceptionException
+     * @throws BadOperandTypeException
+     * @throws WrongStringUsageException
+     * @throws BadOperandValueException
+     * @throws UnexpectedFileStructureException
+     */
     public function execute(FrameController $frameController): void
     {
         // TODO: Implement Stri2Int logic.
         $args = $this->getArgs();
+        if (count($args) != 3) {
+            throw new UnexpectedFileStructureException("Invalid number of arguments. Expected 3, got " . count($args) . ".");
+        }
         $variable = CheckVariable::checkValidity($frameController, $args[0]);
         $symbol1 = CheckSymbol::checkValidity($frameController, $args[1]);
         $symbol2 = CheckSymbol::checkValidity($frameController, $args[2]);
 
-        if (CheckSymbol::getType($symbol1) == 'string' && CheckSymbol::getType($symbol2) == 'int') {
-            $string = CheckSymbol::getValue($symbol1);
+        if (CheckSymbol::getType($symbol1) == 'string' && ( CheckSymbol::getType($symbol2) == 'int' || CheckSymbol::getType($symbol2) == 'integer' )) {
+            $string = (string)CheckSymbol::getValue($symbol1);
             $index = CheckSymbol::getValue($symbol2);
 
             if ($index < 0 || $index >= strlen($string)){
                 throw new WrongStringUsageException("Index out of range.");
             }
 
-            $char = $string[$index];
+            $char = $string[(int)$index];
             $ascii = ord($char);
 
             $variable->setType('int');

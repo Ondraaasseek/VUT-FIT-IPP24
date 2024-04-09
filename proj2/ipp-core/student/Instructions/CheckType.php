@@ -1,6 +1,6 @@
 <?php
 
-namespace IPP\student\Instructions;
+namespace IPP\Student\Instructions;
 
 use IPP\Student\Frames\FrameController;
 

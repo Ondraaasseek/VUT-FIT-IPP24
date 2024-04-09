@@ -2,86 +2,179 @@
 
 namespace IPP\Student;
 
+use DOMElement;
 use IPP\Core\AbstractInterpreter;
-use IPP\student\Exceptions\SemanticExceptionException;
+use IPP\Student\Exceptions\BadOperandValueException;
+use IPP\Student\Exceptions\MissingValueException;
+use IPP\Student\Exceptions\SemanticExceptionException;
+use IPP\Student\Exceptions\UnexpectedFileStructureException;
 use IPP\Student\Frames\FrameController;
 use IPP\Student\Instructions\Instruction;
 use IPP\Student\Instructions\InstructionFactory;
-use IPP\Core\Exception\NotImplementedException;
 
 class Interpreter extends AbstractInterpreter
 {
-    public function execute(): int
-    {
-        $dom = $this->source->getDOMDocument();
-
-        $instructionsArray = [];
-        $frameController = new FrameController();
-
-        // Parse the XML document for instructions
-        $instructions = $dom->getElementsByTagName('instruction');
-        foreach ($instructions as $instruction){
-            // Get the instruction opCode
-            $opCode = $instruction->getAttribute('opcode');
-            // Get the instruction arguments
-            $args = [];
-            foreach ($instruction->childNodes as $arg){
-                if ($arg->nodeType == XML_ELEMENT_NODE){
-                    // If argument is not and var type edit this argument with a type gotten
-                    // from arg type attribute and concat with @ as delimiter
-                    if ($arg->getAttribute('type') != 'var'){
-                        $args[] = $arg->getAttribute('type') . '@' . $arg->nodeValue;
-                    } else {
-                        // If argument is var type, add it to the args array
-                        $args[] = $arg->nodeValue;
-                    }
-                }
-            }
-            // rotate the args array to have the correct order
-            $args = array_reverse($args);
-            // Create an instance of the instruction
-            $instructionObj = InstructionFactory::createInstance($opCode, $args);
-            $instructionsArray[(int)$instruction->getAttribute('order')] = $instructionObj;
-            //print_r($instructionsArray);
-        }
-        // Sort in different desc order and push into callstack
-        ksort($instructionsArray);
-        // Fix the order of the instructions
-        $instructionsArray = array_values($instructionsArray);
-        // Set the instruction array to the frame controller
-        $frameController->setInstructionsArray($instructionsArray);
-        // Input the first instruction to the call stack
-        $i = 0;
-        $frameController->pushCallStack($instructionsArray[$i]);
-        while(!$frameController->callStackIsEmpty()){
-            $instruction = $frameController->popCallStack();
-            $instruction->execute($frameController);
-            if ($frameController->callStackIsEmpty()){
-                $i++;
-                if ($i < count($instructionsArray)){
-                    $frameController->pushCallStack($instructionsArray[$i]);
-                }
-            } else {
-                // We have something that changed the call stack, so we have to find that new label and edit the $i by it
-                $i = $this->findInstructionIndex($instructionsArray, $frameController->callStackTop());
-                if ($i < count($instructionsArray)){
-                    $i++;
-                }
-                $frameController->pushCallStack($instructionsArray[$i]);
-            }
-        }
-        return 0;
-    }
-
-    private function findInstructionIndex($instructionsArray, $instruction) : int{
-        if ($instruction == null){
-            throw new SemanticExceptionException('Instruction not found.');
-        }
+    /**
+     * @param array<Instruction> $instructionsArray
+     * @throws SemanticExceptionException
+     */
+    private function findInstructionIndex(array $instructionsArray, Instruction $instruction) : int{
         foreach ($instructionsArray as $key => $value){
-            if ($value == $instruction){
+            if ($value === $instruction){
                 return $key;
             }
         }
         throw new SemanticExceptionException('Instruction not found.');
+    }
+
+
+    /**
+     * @throws MissingValueException
+     * @throws SemanticExceptionException
+     * @throws UnexpectedFileStructureException
+     */
+    public function execute(): int
+    {
+        $dom = $this->source->getDOMDocument();
+        $root = $dom->documentElement;
+
+        // Check if the root element is correct
+        if ($root->nodeName !== 'program' || $root->getAttribute('language') !== 'IPPcode24') {
+            throw new UnexpectedFileStructureException('Invalid root element. Expected <program language="IPPcode24">.');
+        }
+
+        $instructionsArray = [];
+        $frameController = new FrameController();
+        $frameController->setInputReader($this->input);
+
+        // Check if the root element has only instruction elements
+        foreach ($root->childNodes as $element) {
+            if ($element instanceof DOMElement && $element->nodeName !== 'instruction') {
+                throw new UnexpectedFileStructureException('Unknown element found: ' . $element->nodeName);
+            }
+        }
+
+        // Parse the XML document for instructions
+        $orderNumbers = [];
+        $instructions = $dom->getElementsByTagName('instruction');
+        foreach ($instructions as $instruction) {
+            if (!$instruction instanceof DOMElement || !$instruction->hasAttribute('opcode')) {
+                throw new UnexpectedFileStructureException('Invalid element found in the file. Expected only instructions.');
+            }
+            // Check for duplicate order numbers
+            $orderNumber = (int)$instruction->getAttribute('order');
+            if ($orderNumber < 1) {
+                throw new UnexpectedFileStructureException('Invalid or missing order number found: ' . $orderNumber);
+            }
+            if (in_array($orderNumber, $orderNumbers)) {
+                throw new UnexpectedFileStructureException('Duplicate order number found: ' . $orderNumber);
+            }
+            $orderNumbers[] = $orderNumber;
+            // Get the instruction opCode
+            $opCode = $instruction->getAttribute('opcode');
+            $opCode = strtoupper($opCode);
+            // Get the instruction arguments
+            $args = [];
+            $argNodes = [];
+            foreach ($instruction->childNodes as $arg) {
+                if ($arg instanceof DOMElement && preg_match("/^arg(\d+)$/", $arg->nodeName, $matches)) {
+                    $argNodes[(int)$matches[1]] = $arg;
+                } else if ($arg instanceof DOMElement) {
+                    throw new UnexpectedFileStructureException('Invalid argument element found: ' . $arg->nodeName);
+                }
+            }
+
+            if (count($argNodes) > 0) {
+                // Check if the arguments are in increasing order
+                $isIncreasing = array_keys($argNodes) === range(1, count($argNodes));
+
+                // Check if the arguments are in decreasing order
+                $isDecreasing = array_keys($argNodes) === range(count($argNodes), 1);
+
+                if (!$isIncreasing && !$isDecreasing) {
+                    throw new UnexpectedFileStructureException('Arguments are not in consistent order.');
+                }
+
+                // If the order is decreasing, reverse the array
+                if ($isDecreasing) {
+                    $argNodes = array_reverse($argNodes, true);
+                }
+            }
+
+            foreach ($argNodes as $argNum => $arg) {
+                if ($arg->getAttribute('type') != 'var') {
+                    $args[] = $arg->getAttribute('type') . '@' . $arg->nodeValue;
+                } else {
+                    // If argument is var type, add it to the args array
+                    $args[] = $arg->nodeValue;
+                }
+            }
+
+            // Create an instance of the instruction
+            $args = array_filter($args, function ($value) {
+                return !is_null($value) && $value !== '';
+            });
+
+            $instructionObj = InstructionFactory::createInstance($opCode, $args);
+            $instructionsArray[(int)$instruction->getAttribute('order')] = $instructionObj;
+        }
+        // Sort in different desc order and push into callstack
+        ksort($instructionsArray);
+        // Set the instruction array to the frame controller from 1 to n
+        $instructionsArray = array_combine(range(1, count($instructionsArray)), array_values($instructionsArray));
+        // Set the instruction array to the frame controller
+        $frameController->setInstructionsArray($instructionsArray);
+
+        //go through the instructions and set the labels
+        foreach ($instructionsArray as $instruction) {
+            if ($instruction->getOpCode() == 'LABEL') {
+                $instruction->execute($frameController);
+            }
+        }
+
+        // Input the first instruction to the call stack
+        $i = 1;
+        $frameController->pushCallStack($i);
+        while (!$frameController->callStackIsEmpty() || $i <= count($instructionsArray)) {
+            if ($i > count($instructionsArray)) {
+                return 0;
+            }
+            $instruction = $frameController->getInstructionsArray()[$frameController->popCallStack()];
+            //$frameController->getStatistics($instruction);
+            if ($instruction instanceof Instruction && $instruction->getOpCode() == 'RETURN') {
+                if ($frameController->callStackIsEmpty()) {
+                    throw new MissingValueException("RETURN instruction without a call stack.");
+                }
+            }
+
+            if ($instruction instanceof Instruction && $instruction->getOpCode() != 'LABEL') {
+                $instruction->execute($frameController);
+                $frameController->incrementInstructionCounter();
+            }
+
+            if ($frameController->getCallStackSize() > 0) {
+                // We have call or multiple calls in the call stack
+                $topInstruction = $frameController->callStackTop();
+                $i = (int)$topInstruction;
+                while ($i <= count($instructionsArray) && $instructionsArray[$i]->getOpCode() != 'RETURN') {
+                    $instruction = $frameController->getInstructionsArray()[$frameController->popCallStack()];
+                    $instruction->execute($frameController);
+                    $i++;
+                    $frameController->pushCallStack($i);
+                }
+            }
+
+            if ($frameController->callStackIsEmpty()) {
+                $i++;
+                if ($i <= count($instructionsArray)) {
+                    $frameController->pushCallStack($i);
+                }
+            } else {
+                // We have something that changed the call stack, so we have to find that new label and edit the $i by it
+                $topInstruction = $frameController->callStackTop();
+                $i = (int)$topInstruction;
+            }
+        }
+        return 0;
     }
 }

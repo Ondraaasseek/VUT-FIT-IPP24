@@ -2,6 +2,8 @@
 
 namespace IPP\Student\Instructions;
 
+use IPP\Student\Exceptions\UnexpectedFileStructureException;
+
 class InstructionFactory
 {
     /**
@@ -9,6 +11,7 @@ class InstructionFactory
      * @param string $opCode
      * @param array<string> $args
      * @return Instruction
+     * @throws UnexpectedFileStructureException
      */
     public static function createInstance(string $opCode, array $args): Instruction
     {
@@ -120,7 +123,7 @@ class InstructionFactory
                 $instruction = new InstrucPushS($opCode, $args);
                 break;
             default:
-                throw new \InvalidArgumentException("Unknown opcode: " . $opCode);
+                throw new UnexpectedFileStructureException("Unknown opcode: " . $opCode);
         }
         return $instruction;
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace IPP\student\Instructions;
+namespace IPP\Student\Instructions;
 
 use IPP\Student\Exceptions\BadOperandTypeException;
 use IPP\Student\Exceptions\NonExistentVariableException;
@@ -26,7 +26,6 @@ class CheckVariable
             default:
                 // Should not happen
                 throw new BadOperandTypeException("First argument is not variable.");
-                break;
         }
 
         if ($variable === null){

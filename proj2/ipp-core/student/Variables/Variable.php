@@ -6,13 +6,18 @@ class Variable
 {
     private string $name;
     private ?string $type;
-    private mixed $value;
+    private string|int|bool|null $value;
 
-    public function __construct(string $name, ?string $type, mixed $value)
+    public function __construct(string $name, ?string $type, string|int|bool|null $value)
     {
         $this->name = $name;
         $this->type = $type;
         $this->value = $value;
+    }
+
+    public function __toString(): string
+    {
+        return $this->name . ' = ' . $this->value;
     }
 
     public function getName(): string
@@ -20,17 +25,17 @@ class Variable
         return $this->name;
     }
 
-    public function getType(): string
+    public function getType(): string|null
     {
         return $this->type;
     }
 
-    public function getValue()
+    public function getValue() : string|bool|int|null
     {
         return $this->value;
     }
 
-    public function setValue($value): void
+    public function setValue(bool|int|string $value): void
     {
         $this->value = $value;
     }

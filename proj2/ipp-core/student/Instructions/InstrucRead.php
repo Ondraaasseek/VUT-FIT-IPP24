@@ -4,26 +4,39 @@ namespace IPP\Student\Instructions;
 
 use _PHPStan_11268e5ee\Nette\NotImplementedException;
 use IPP\Core\FileInputReader;
+use IPP\Student\Exceptions\BadOperandTypeException;
+use IPP\Student\Exceptions\NonExistentVariableException;
+use IPP\Student\Exceptions\UnexpectedFileStructureException;
 use IPP\Student\Frames\FrameController;
 
 class InstrucRead extends Instruction
 {
+    /**
+     * @throws NonExistentVariableException
+     * @throws BadOperandTypeException
+     * @throws UnexpectedFileStructureException
+     */
     public function execute(FrameController $frameController): void
     {
 
-        $inputReader = new FileInputReader(STDIN);
+        $inputReader = $frameController->getInputReader();
         $args = $this->getArgs();
+        if (count($args) != 2) {
+            throw new UnexpectedFileStructureException("Invalid number of arguments. Expected 2, got " . count($args) . ".");
+        }
+
         $variable = CheckVariable::checkValidity($frameController, $args[0]);
-        $typeValidity = CheckType::checkValidity($args[1]);
+        $typeValidity = CheckType::checkValidity(explode('@', $args[1])[1]);
 
         if (!$typeValidity) {
-            throw new NotImplementedException("Invalid type");
+            throw new BadOperandTypeException("Invalid type for read instruction\n");
         }
 
         $value = null;
         $type = $args[1];
         switch ($type) {
             case 'int':
+            case 'integer':
                 $value = $inputReader->readInt();
                 break;
             case 'bool':

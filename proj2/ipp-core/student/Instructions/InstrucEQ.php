@@ -2,14 +2,30 @@
 
 namespace IPP\Student\Instructions;
 
-use IPP\student\Exceptions\BadOperandTypeException;
+use IPP\Core\Exception\NotImplementedException;
+use IPP\Student\Exceptions\BadOperandTypeException;
+use IPP\Student\Exceptions\BadOperandValueException;
+use IPP\Student\Exceptions\NonExistentVariableException;
+use IPP\Student\Exceptions\SemanticExceptionException;
+use IPP\Student\Exceptions\UnexpectedFileStructureException;
 use IPP\Student\Frames\FrameController;
 
 class InstrucEQ extends Instruction
 {
+    /**
+     * @throws NonExistentVariableException
+     * @throws NotImplementedException
+     * @throws BadOperandTypeException
+     * @throws SemanticExceptionException
+     * @throws BadOperandValueException
+     * @throws UnexpectedFileStructureException
+     */
     public function execute(FrameController $frameController): void
     {
         $args = $this->getArgs();
+        if (count($args) != 3){
+            throw new UnexpectedFileStructureException("Invalid number of arguments. Expected 3, got " . count($args) . ".");
+        }
 
         $variable = CheckVariable::checkValidity($frameController, $args[0]);
         $arg1 = CheckSymbol::checkValidity($frameController, $args[1]);
@@ -23,7 +39,7 @@ class InstrucEQ extends Instruction
             $value1 = CheckSymbol::getValue($arg1);
             $value2 = CheckSymbol::getValue($arg2);
 
-            $result = strcmp($value1, $value2);
+            $result = strcmp((string)$value1, (string)$value2);
             $variable->setType('bool');
             if ($result == 0){
                 $variable->setValue('true');
