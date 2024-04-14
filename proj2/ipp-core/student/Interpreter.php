@@ -97,16 +97,14 @@ class Interpreter extends AbstractInterpreter
 
             foreach ($argNodes as $argNum => $arg) {
                 if ($arg->getAttribute('type') != 'var') {
-                    $args[] = $arg->getAttribute('type') . '@' . trim($arg->nodeValue);
+                    $nodeValue = $arg->nodeValue !== null ? trim($arg->nodeValue) : '';
+                    $args[] = $arg->getAttribute('type') . '@' . $nodeValue;
                 } else {
                     // If argument is var type, add it to the args array
-                    $args[] = trim($arg->nodeValue);
+                    $nodeValue = $arg->nodeValue !== null ? trim($arg->nodeValue) : '';
+                    $args[] = $nodeValue;
                 }
             }
-
-            $args = array_filter($args, function ($value) {
-                return !is_null($value) && $value !== '';
-            });
 
             // Create an instance of the instruction
             $instructionObj = InstructionFactory::createInstance($opCode, $args);

@@ -47,10 +47,6 @@ class InstrucSetChar extends Instruction
             throw new WrongStringUsageException("Index out of range.");
         }
 
-        if (strlen((string)CheckSymbol::getValue($symbol2)) == 0) {
-            throw new WrongStringUsageException("Empty string.");
-        }
-
         $value = (string)CheckSymbol::getValue($symbol2);
         $variable->setType("string");
         $variable->setValue(substr_replace((string)$variable->getValue(), $value[0], (int)CheckSymbol::getValue($symbol1), 1));

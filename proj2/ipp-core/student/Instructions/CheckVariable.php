@@ -41,7 +41,9 @@ class CheckVariable
             default:
                 throw new UnexpectedFileStructureException("First argument is not variable. Expected GF, LF or TF.");
         }
-
+        if ($variable == null) {
+            throw new NonExistentVariableException("Variable ". $name . " not found in " . $frame . " frame.");
+        }
         return $variable;
     }
 }
