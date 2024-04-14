@@ -32,7 +32,6 @@ class Interpreter extends AbstractInterpreter
         $instructionsArray = [];
         $frameController = new FrameController();
         $frameController->setInputReader($this->input);
-
         // Check if the root element has only instruction elements
         if ($root !== null) {
             foreach ($root->childNodes as $element) {
@@ -65,8 +64,15 @@ class Interpreter extends AbstractInterpreter
             $args = [];
             $argNodes = [];
             foreach ($instruction->childNodes as $arg) {
-                if ($arg instanceof DOMElement && preg_match("/^arg(\d+)$/", $arg->nodeName, $matches)) {
-                    $argNodes[(int)$matches[1]] = $arg;
+                if ($arg instanceof DOMElement && preg_match("/^arg([1-3])$/", $arg->nodeName, $matches)) {
+                    $index = (int)$matches[1];
+                    if (isset($argNodes[$index])) {
+                        throw new UnexpectedFileStructureException('Duplicate argument found: ' . $arg->nodeName);
+                    }
+                    if (!$arg->hasAttribute('type')) {
+                        throw new UnexpectedFileStructureException('Missing type attribute in argument: ' . $arg->nodeName);
+                    }
+                    $argNodes[$index] = $arg;
                 } else if ($arg instanceof DOMElement) {
                     throw new UnexpectedFileStructureException('Invalid argument element found: ' . $arg->nodeName);
                 }
@@ -91,23 +97,29 @@ class Interpreter extends AbstractInterpreter
 
             foreach ($argNodes as $argNum => $arg) {
                 if ($arg->getAttribute('type') != 'var') {
-                    $args[] = $arg->getAttribute('type') . '@' . $arg->nodeValue;
+                    $args[] = $arg->getAttribute('type') . '@' . trim($arg->nodeValue);
                 } else {
                     // If argument is var type, add it to the args array
-                    $args[] = $arg->nodeValue;
+                    $args[] = trim($arg->nodeValue);
                 }
             }
 
-            // Create an instance of the instruction
             $args = array_filter($args, function ($value) {
                 return !is_null($value) && $value !== '';
             });
 
+            // Create an instance of the instruction
             $instructionObj = InstructionFactory::createInstance($opCode, $args);
             $instructionsArray[(int)$instruction->getAttribute('order')] = $instructionObj;
         }
         // Sort in different desc order and push into callstack
         ksort($instructionsArray);
+
+        // Check if there are any instructions
+        if (empty($instructionsArray)) {
+            return 0;
+        }
+
         // Set the instruction array to the frame controller from 1 to n
         $instructionsArray = array_combine(range(1, count($instructionsArray)), array_values($instructionsArray));
         // Set the instruction array to the frame controller
@@ -134,7 +146,6 @@ class Interpreter extends AbstractInterpreter
                     throw new MissingValueException("RETURN instruction without a call stack.");
                 }
             }
-
             if ($instruction instanceof Instruction && $instruction->getOpCode() != 'LABEL') {
                 $instruction->execute($frameController);
                 $frameController->incrementInstructionCounter();
@@ -146,7 +157,9 @@ class Interpreter extends AbstractInterpreter
                 $i = (int)$topInstruction;
                 while ($i <= count($instructionsArray) && $instructionsArray[$i]->getOpCode() != 'RETURN') {
                     $instruction = $frameController->getInstructionsArray()[$frameController->popCallStack()];
-                    $instruction->execute($frameController);
+                    if ($instruction instanceof Instruction && $instruction->getOpCode() != 'LABEL') {
+                        $instruction->execute($frameController);
+                    }
                     $i++;
                     $frameController->pushCallStack($i);
                 }

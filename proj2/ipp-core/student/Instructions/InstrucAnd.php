@@ -34,7 +34,24 @@ class InstrucAnd extends Instruction
 
         if (CheckSymbol::getType($symbol1) == 'bool' && CheckSymbol::getType($symbol2) == 'bool'){
             $var->setType('bool');
-            $var->setValue(CheckSymbol::getValue($symbol1) && CheckSymbol::getValue($symbol2));
+
+            $val1 = CheckSymbol::getValue($symbol1) === "true";
+            $val2 = CheckSymbol::getValue($symbol2) === "true";
+
+            if ($val1 != 1){
+                $val1 = 0;
+            }
+            if ($val2 != 1){
+                $val2 = 0;
+            }
+
+            if ($val1 && $val2){
+                $var->setValue("true");
+            }
+            else{
+                $var->setValue("false");
+            }
+
         }
         else{
             throw new BadOperandTypeException("Arguments must be of type bool.");

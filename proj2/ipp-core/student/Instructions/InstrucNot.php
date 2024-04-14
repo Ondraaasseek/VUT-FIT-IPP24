@@ -32,7 +32,16 @@ class InstrucNot extends Instruction
 
         if (CheckSymbol::getType($symbol) == 'bool'){
             $var->setType('bool');
-            $var->setValue(!CheckSymbol::getValue($symbol));
+            $val = CheckSymbol::getValue($symbol) === "true";
+            if ($val != 1){
+                $val = 0;
+            }
+            if ($val){
+                $var->setValue("false");
+            }
+            else{
+                $var->setValue("true");
+            }
         }
         else{
             throw new BadOperandTypeException("Argument must be of type bool.");

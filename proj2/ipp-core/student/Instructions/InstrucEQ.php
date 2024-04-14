@@ -31,13 +31,23 @@ class InstrucEQ extends Instruction
         $arg1 = CheckSymbol::checkValidity($frameController, $args[1]);
         $arg2 = CheckSymbol::checkValidity($frameController, $args[2]);
 
-        if (CheckSymbol::getType($arg1) != CheckSymbol::getType($arg2)){
+
+        if (CheckSymbol::getType($arg1) != CheckSymbol::getType($arg2) && (CheckSymbol::getType($arg1) != 'nil' && CheckSymbol::getType($arg2) != 'nil')){
             throw new BadOperandTypeException("Types in relation operation were not the same.");
+
         }
 
-        if (CheckSymbol::getType($arg1) == 'string'){
+        if (CheckSymbol::getType($arg1) == 'string' || CheckSymbol::getType($arg2) == 'string'){
             $value1 = CheckSymbol::getValue($arg1);
             $value2 = CheckSymbol::getValue($arg2);
+
+            if ($value1 == 'nil'){
+                $value1 = '';
+            }
+
+            if ($value2 == 'nil'){
+                $value2 = '';
+            }
 
             $result = strcmp((string)$value1, (string)$value2);
             $variable->setType('bool');
@@ -48,9 +58,17 @@ class InstrucEQ extends Instruction
             }
         }
 
-        if (CheckSymbol::getType($arg1) == 'int'){
+        if (CheckSymbol::getType($arg1) == 'int' || CheckSymbol::getType($arg1) == 'integer' || CheckSymbol::getType($arg2) == 'int' || CheckSymbol::getType($arg2) == 'integer'){
             $value1 = CheckSymbol::getValue($arg1);
             $value2 = CheckSymbol::getValue($arg2);
+
+            if ($value1 == 'nil'){
+                $value1 = 0;
+            }
+
+            if ($value2 == 'nil'){
+                $value2 = 0;
+            }
 
             $variable->setType('bool');
             if ($value1 == $value2){
@@ -60,9 +78,16 @@ class InstrucEQ extends Instruction
             }
         }
 
-        if (CheckSymbol::getType($arg1) == 'bool'){
-            $value1 = (int)CheckSymbol::getValue($arg1);
-            $value2 = (int)CheckSymbol::getValue($arg2);
+        if (CheckSymbol::getType($arg1) == 'bool' || CheckSymbol::getType($arg2) == 'bool'){
+            $value1 = CheckSymbol::getValue($arg1) === "true";
+            $value2 = CheckSymbol::getValue($arg2) === "true";
+
+            if ($value1 != 1){
+                $value1 = 0;
+            }
+            if ($value2 != 1){
+                $value2 = 0;
+            }
 
             $variable->setType('bool');
             if ($value1 == $value2){
@@ -70,6 +95,11 @@ class InstrucEQ extends Instruction
             } else {
                 $variable->setValue('false');
             }
+        }
+
+        if (CheckSymbol::getType($arg1) == 'nil' && CheckSymbol::getType($arg2) == 'nil'){
+            $variable->setType('bool');
+            $variable->setValue('true');
         }
     }
 }

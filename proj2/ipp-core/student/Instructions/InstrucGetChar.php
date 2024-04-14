@@ -5,6 +5,7 @@ namespace IPP\Student\Instructions;
 use IPP\Core\Exception\NotImplementedException;
 use IPP\Student\Exceptions\BadOperandTypeException;
 use IPP\Student\Exceptions\BadOperandValueException;
+use IPP\Student\Exceptions\FrameDoesNotExistsException;
 use IPP\Student\Exceptions\NonExistentVariableException;
 use IPP\Student\Exceptions\SemanticExceptionException;
 use IPP\Student\Exceptions\UnexpectedFileStructureException;
@@ -21,6 +22,7 @@ class InstrucGetChar extends Instruction
      * @throws SemanticExceptionException
      * @throws BadOperandValueException
      * @throws UnexpectedFileStructureException
+     * @throws FrameDoesNotExistsException
      */
     public function execute(FrameController $frameController): void
     {
@@ -32,7 +34,7 @@ class InstrucGetChar extends Instruction
         $symbol1 = CheckSymbol::checkValidity($frameController, $args[1]);
         $symbol2 = CheckSymbol::checkValidity($frameController, $args[2]);
 
-        if (CheckSymbol::getType($symbol1) != "string" || CheckSymbol::getType($symbol2) != "int") {
+        if (CheckSymbol::getType($symbol1) != "string" || (CheckSymbol::getType($symbol2) != "int" && CheckSymbol::getType($symbol2) != "integer")){
             throw new BadOperandTypeException("Invalid type of symbol, expected string and int.");
         }
 

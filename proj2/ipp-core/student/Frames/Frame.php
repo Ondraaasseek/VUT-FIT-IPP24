@@ -34,4 +34,9 @@ class Frame
     {
         return $this->variables[$name] ?? null;
     }
+
+    public function hasVariable(string $name): bool
+    {
+        return isset($this->variables[$name]);
+    }
 }

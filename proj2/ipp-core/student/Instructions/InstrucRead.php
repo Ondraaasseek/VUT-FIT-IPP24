@@ -19,7 +19,6 @@ class InstrucRead extends Instruction
     public function execute(FrameController $frameController): void
     {
 
-        $inputReader = $frameController->getInputReader();
         $args = $this->getArgs();
         if (count($args) != 2) {
             throw new UnexpectedFileStructureException("Invalid number of arguments. Expected 2, got " . count($args) . ".");
@@ -29,21 +28,29 @@ class InstrucRead extends Instruction
         $typeValidity = CheckType::checkValidity(explode('@', $args[1])[1]);
 
         if (!$typeValidity) {
-            throw new BadOperandTypeException("Invalid type for read instruction\n");
+            throw new UnexpectedFileStructureException("Invalid type for read instruction\n");
         }
 
         $value = null;
-        $type = $args[1];
+        $type = explode('@', $args[1])[1];
         switch ($type) {
             case 'int':
             case 'integer':
-                $value = $inputReader->readInt();
+                $value = $frameController->getInputReader()->readInt();
                 break;
             case 'bool':
-                $value = $inputReader->readBool();
+                $value = $frameController->getInputReader()->readBool();
+                if ($value == 1) {
+                    $value = 'true';
+                } else if ($value == null){
+                    $value = 'nil';
+                    $type = 'nil';
+                } else {
+                    $value = 'false';
+                }
                 break;
             case 'string':
-                $value = $inputReader->readString();
+                $value = $frameController->getInputReader()->readString();
                 break;
         }
 

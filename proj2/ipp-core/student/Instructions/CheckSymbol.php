@@ -5,6 +5,7 @@ namespace IPP\Student\Instructions;
 use IPP\Core\Exception\NotImplementedException;
 use IPP\Student\Exceptions\BadOperandTypeException;
 use IPP\Student\Exceptions\BadOperandValueException;
+use IPP\Student\Exceptions\FrameDoesNotExistsException;
 use IPP\Student\Exceptions\NonExistentVariableException;
 use IPP\Student\Exceptions\SemanticExceptionException;
 use IPP\Student\Exceptions\UnexpectedFileStructureException;
@@ -18,6 +19,7 @@ class CheckSymbol
      * @throws NotImplementedException
      * @throws SemanticExceptionException
      * @throws BadOperandTypeException
+     * @throws FrameDoesNotExistsException
      */
     public static function checkValidity(FrameController $frameController, Instruction|string $arg): string|int|Variable
     {
@@ -29,12 +31,21 @@ class CheckSymbol
         $nameOrValue = explode('@', $arg)[1];
         switch ($frameOrType) {
             case 'GF':
+                if (!$frameController->getGlobalFrame()->hasVariable($nameOrValue)) {
+                    throw new NonExistentVariableException("Variable ". $nameOrValue . " not found in " . $frameOrType . " frame.");
+                }
                 $variable = $frameController->getGlobalFrame()->getVariable($nameOrValue);
                 break;
             case 'LF':
+                if (!$frameController->getLocalFrame()->hasVariable($nameOrValue)) {
+                    throw new NonExistentVariableException("Variable ". $nameOrValue . " not found in " . $frameOrType . " frame.");
+                }
                 $variable = $frameController->getLocalFrame()->getVariable($nameOrValue);
                 break;
             case 'TF':
+                if (!$frameController->getTemporaryFrame()->hasVariable($nameOrValue)) {
+                    throw new NonExistentVariableException("Variable ". $nameOrValue . " not found in " . $frameOrType . " frame.");
+                }
                 $variable = $frameController->getTemporaryFrame()->getVariable($nameOrValue);
                 break;
             case 'int':
@@ -62,8 +73,8 @@ class CheckSymbol
             default:
                 throw new NonExistentVariableException("Variable " . $nameOrValue . " was not found in " . $frameOrType . " frame.");
         }
-        if ($variable == null){
-            throw new BadOperandTypeException("Variable " . $nameOrValue . " is bad Type .");
+        if ($variable === null){
+            throw new BadOperandTypeException("Variable " . $nameOrValue . " is bad Type.");
         }
         return $variable;
     }
